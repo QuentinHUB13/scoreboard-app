@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ScoreBoard Multi</title>
+   
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="icon.png">
+    <link rel="apple-touch-icon" href="icon.png">
+    <meta name="theme-color" content="#121212">
+
+    <style>
+        :root {
+            --bg: #121212; --surface: #1e1e1e; --text: #ffffff;
+            --primary: #8e24aa; /* Skull King */
+            --secondary: #d32f2f; /* Papayoo */
+            --tertiary: #00acc1; /* Tarot */
+            --quaternary: #2e7d32; /* Belote Green */
+            --quinary: #00897b; /* Skyjo Teal */
+            --col-rami: #3949ab; /* Indigo */
+            --col-six: #fbc02d; /* Yellow Bull */
+            --col-dice: #ec407a; /* Rose/Rouge flashy */
+            --col-sr: #4caf50; /* Green Space */
+            --success: #43a047;
+            --error: #e53935;
+            --disabled: #444;
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 15px; padding-bottom: 120px; -webkit-tap-highlight-color: transparent; }
+        h1, h2, h3 { text-align: center; margin: 10px 0; }
+        .hidden { display: none !important; }
+
+        /* INPUTS & BTNS */
+        .btn { border: none; padding: 15px; border-radius: 12px; font-size: 1.1rem; font-weight: bold; width: 100%; cursor: pointer; color: white; margin-bottom: 10px; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .btn:disabled { background: var(--disabled) !important; opacity: 0.5; cursor: not-allowed; }
+        .btn-sk { background: linear-gradient(45deg, #6a1b9a, #8e24aa); }
+        .btn-pap { background: linear-gradient(45deg, #c62828, #d32f2f); }
+        .btn-tarot { background: linear-gradient(45deg, #00838f, #00acc1); }
+        .btn-neutral { background: #444; }
+        .btn-row { display: flex; gap: 10px; }
+        .btn-belote { background: linear-gradient(45deg, #2e7d32, #43a047); }
+        .btn-skyjo { background: linear-gradient(45deg, #00897b, #26a69a); }
+        .btn-rami { background: linear-gradient(45deg, #3949ab, #5c6bc0); }
+        .btn-dice { background: linear-gradient(45deg, #ec407a, #d81b60); }
+        .btn-sr { background: linear-gradient(45deg, #1b5e20, #4caf50); }
+        .btn-six { background: linear-gradient(45deg, #f57f17, #fbc02d); color: black; } /* Texte noir pour le jaune */
+        input, select { padding: 15px; border-radius: 10px; border: 1px solid #444; background: #2c2c2c; color: white; font-size: 1.1rem; width: 100%; box-sizing: border-box; margin-bottom: 10px; }
+
+        /* CARDS */
+        .game-card { background: var(--surface); padding: 20px; border-radius: 15px; margin-bottom: 20px; text-align: center; border: 1px solid #333; }
+        .game-icon { font-size: 3rem; display: block; margin-bottom: 10px; }
+        .player-card { background-color: var(--surface); padding: 15px; margin-bottom: 15px; border-radius: 12px; border-left: 5px solid #555; }
+        .player-header { display: flex; justify-content: space-between; font-weight: bold; font-size: 1.2rem; margin-bottom: 5px; border-bottom: 1px solid #333; padding-bottom: 8px; }
+
+        /* SPECIFIC UI ELEMENTS */
+        .sk-control-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .sk-stepper { display: flex; align-items: center; background: #2b2b2b; border-radius: 20px; }
+        .sk-btn-step { width: 44px; height: 44px; background: #3d3d3d; border: none; color: white; font-size: 1.3rem; border-radius: 50%; touch-action: manipulation; }
+        .sk-val { width: 35px; text-align: center; font-weight: bold; font-size: 1.1rem; }
+
+        .pap-input-row { display: flex; align-items: center; gap: 10px; }
+        .pap-input { width: 80px; text-align: center; font-weight: bold; font-size: 1.3rem; }
+        .btn-magic { background: none; border: 1px solid #444; color: #ffd700; border-radius: 8px; padding: 10px; font-size: 1.2rem; }
+
+        .tarot-board { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 20px; background: #263238; padding: 10px; border-radius: 10px; }
+        .tarot-score-pill { background: #37474f; padding: 8px 12px; border-radius: 20px; font-size: 0.9rem; border: 1px solid var(--tertiary); min-width: 80px; text-align: center; }
+        .tarot-segment { display: flex; gap: 5px; margin-bottom: 15px; overflow-x: auto; }
+        .segment-btn { flex: 1; background: #333; border: 1px solid #555; padding: 10px; color: #aaa; border-radius: 8px; white-space: nowrap; }
+        .segment-btn.selected { background: var(--tertiary); color: white; border-color: var(--tertiary); font-weight: bold; }
+
+        /* BANNERS & FLOATING */
+        .total-banner { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: #111; padding: 10px 25px; border-radius: 30px; font-weight: bold; font-size: 1.1rem; border: 2px solid #333; z-index: 99; white-space: nowrap; }
+        .sum-ok { color: var(--success); border-color: var(--success); }
+        .sum-bad { color: var(--error); border-color: var(--error); }
+        .floating-action { position: fixed; bottom: 0; left: 0; right: 0; padding: 15px; background: linear-gradient(to top, var(--bg) 90%, transparent); z-index: 100; }
+       
+        /* TABLE */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        td { padding: 12px; border-bottom: 1px solid #333; }
+        .rank-1 { color: #ffd700; font-weight: bold; }
+
+        /* Style des dés affichés */
+        .die-face {
+            width: 60px; height: 60px;
+            background: #eee; color: #333;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.8rem; font-weight: bold;
+            box-shadow: 0 4px 0 #bbb; /* Effet 3D */
+            border: 2px solid #333;
+        }
+        .dice-rolling { font-size: 2rem; animation: pulse 0.5s infinite; }
+        @keyframes pulse { 0% { opacity: 0.5; } 100% { opacity: 1; } } 
+
+        /* La Zone (Cadre) */
+        .sr-zone {
+            background: #000;
+            border: 2px solid #333;
+            border-radius: 12px;
+            box-sizing: border-box;
+            margin: 0;
+        
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+        }
+
+        .sr-row-container {
+            flex: 1;
+            display: flex;
+            flex-direction: row;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .sr-inner-layout {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.3s ease;
+        }
+
+        /* --- ROTATIONS --- */
+
+        /* 2 Joueurs : Joueur du haut inversé (180°) */
+        .sr-rotate-180 { transform: rotate(180deg); }
+
+        /* 4 Joueurs : Zones de Gauche (1 & 3) -> Texte Haut vers Bas */
+        .sr-rotate-90 {
+            transform: rotate(90deg);
+            width: 300%; /* Très large pour ne pas être coupé */
+        }
+
+        /* 4 Joueurs : Zones de Droite (2 & 4) -> Texte Bas vers Haut */
+        .sr-rotate-minus-90 {
+            transform: rotate(-90deg);
+            width: 300%;
+        }
+
+        .sr-info {
+            width: 100%;
+            display: flex; justify-content: center; align-items: center; gap: 10px;
+            margin-bottom: 5px;
+        }
+
+        /* --- TEXTE ET BOUTONS --- */
+
+        /* Styles Normaux */
+        .sr-score {
+            font-size: 4rem;
+            font-weight: bold; line-height: 1;
+            text-shadow: 0 0 15px rgba(0,0,0,0.9);
+            margin: 5px 0;
+            transition: all 0.3s ease;
+        }
+
+        /* --- BOUTONS ET CONTENEURS --- */
+
+        .sr-controls {
+            display: flex;
+            gap: 8px; /* Espace entre les boutons */
+            width: 95%; /* Prend toute la largeur disponible dans la zone */
+            margin-top: 5px;
+            justify-content: center;
+        }
+
+        .sr-btn {
+            /* POSITIONNEMENT : Le retour du flex:1 pour qu'ils remplissent la ligne */
+            flex: 1;
+        
+            height: 45px; /* Hauteur fixe confortable */
+            padding: 0; /* On retire le padding qui décalait le texte */
+        
+            /* CENTRAGE DU TEXTE DANS LE BOUTON */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        
+            /* ESTHÉTIQUE */
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            cursor: pointer;
+            color: white;
+            box-shadow: 0 4px 5px rgba(0,0,0,0.5);
+            transition: all 0.2s ease;
+        }
+
+        .sr-btn:active { transform: scale(0.95); }
+        .sr-btn.minus { background: linear-gradient(to bottom, #d32f2f, #b71c1c); }
+        .sr-btn.plus { background: linear-gradient(to bottom, #388e3c, #1b5e20); }
+
+        
+        .sr-name {
+            font-weight: bold; font-size: 1.3rem; color: #eee;
+            text-shadow: 2px 2px 0 #000; white-space: nowrap;
+            transition: all 0.3s ease;
+        }
+
+        .sr-delta {
+            color: #fff; background: #333; padding: 2px 6px;
+            border-radius: 6px; font-weight:bold; font-size:0.9rem;
+            animation: fadeIn 0.2s; border: 1px solid #777;
+        }
+        
+        /* --- MODE EXPANDED (Quand un joueur est seul sur sa ligne) --- */
+        .sr-zone.sr-expanded .sr-controls {
+            width: 90%; /* Un peu moins large pour faire joli quand c'est géant */
+            gap: 15px;
+        }
+
+        .sr-zone.sr-expanded .sr-btn {
+            height: 70px; /* Boutons géants */
+            font-size: 1.8rem;
+            border-radius: 15px;
+        } 
+
+        /* --- MODE EXPANDED (Seul sur la ligne) --- */
+        .sr-zone.sr-expanded .sr-score { font-size: 7rem; margin: 15px 0; }
+        .sr-zone.sr-expanded .sr-name { font-size: 2rem; }
+
+    </style>
+</head>
+<body>
+    <div id="screen-menu">
+        <h1>Mes Jeux</h1>
+        <div class="game-card" onclick="app.goToSetup('skullking')"><span class="game-icon">💀</span><h2>Skull King</h2><button class="btn btn-sk">Jouer</button></div>
+        <div class="game-card" onclick="app.goToSetup('papayoo')"><span class="game-icon">🎲</span><h2>Papayoo</h2><button class="btn btn-pap">Jouer</button></div>
+        <div class="game-card" onclick="app.goToSetup('tarot')"><span class="game-icon">🔮</span><h2>Tarot</h2><button class="btn btn-tarot">Jouer</button></div>
+        <div class="game-card" onclick="app.goToSetup('belote')"><span class="game-icon">♣️</span><h2>Belote</h2><button class="btn btn-belote">Jouer</button></div>
+        <div class="game-card" onclick="app.goToSetup('skyjo')"><span class="game-icon">🃏</span><h2>Skyjo</h2><button class="btn btn-skyjo">Jouer</button></div>
+        <div class="game-card" onclick="app.goToSetup('six')"><span class="game-icon">🐮</span><h2>6 qui prend</h2><button class="btn btn-six">Jouer</button></div>
+        <div class="game-card" onclick="app.goToSetup('rami')"><span class="game-icon">🃏</span><h2>Rami</h2><button class="btn btn-rami">Jouer</button></div>
+        <div class="game-card" onclick="app.goToSetup('starrealms')"><span class="game-icon">🚀</span><h2>Star Realms</h2><button class="btn btn-sr">Combat !</button></div>
+        <div class="game-card" onclick="app.goToSetup('dice')"><span class="game-icon">🎲</span><h2>Dés</h2><button class="btn btn-dice">Ouvrir</button></div>
+    </div>
+
+    <div id="screen-setup" class="hidden">
+        <h1 id="setup-title">Configuration</h1>
+       
+        <div id="setup-standard">
+            <p style="text-align:center; color:#aaa;">Joueurs (séparés par virgule)</p>
+            <input type="text" id="input-players" placeholder="Ex: Alex, Julie, Marc..." onkeyup="app.updateSetupInfo()" />
+        </div>
+
+        <div id="setup-skullking" class="hidden">
+            <p style="text-align:center; color:#aaa; margin-top:15px;">Mode de Score</p>
+            <div class="tarot-segment">
+                <button type="button" class="segment-btn selected" onclick="app.selectSkMode(this, 'classic')" id="btn-sk-classic">Classique</button>
+                <button type="button" class="segment-btn" onclick="app.selectSkMode(this, 'rascal')" id="btn-sk-rascal">Rascal (Avancé)</button>
+            </div>
+            <input type="hidden" id="input-sk-mode" value="classic">
+        </div>
+
+        <div id="setup-belote" class="hidden">
+            <p style="text-align:center; color:#aaa;">Nom des Équipes</p>
+            <input type="text" id="input-team1" placeholder="Nom Équipe 1 (Nous)" />
+            <input type="text" id="input-team2" placeholder="Nom Équipe 2 (Eux)" />
+           
+            <p style="text-align:center; color:#aaa; margin-top:15px;">Variante</p>
+            <div class="tarot-segment">
+                <button type="button" class="segment-btn selected" onclick="app.selectBeloteMode(this, 'classique')">Classique (1000)</button>
+                <button type="button" class="segment-btn" onclick="app.selectBeloteMode(this, 'coinche')">Coinche (2000)</button>
+            </div>
+            <input type="hidden" id="input-belote-mode" value="classique">
+        </div>
+
+        <div id="setup-info" class="hidden" style="background:#263238; padding:15px; border-radius:8px; margin-bottom:15px; font-size:0.9rem;"></div>
+
+        <button id="btn-start" class="btn" onclick="app.startGame()">Lancer la partie</button>
+        <button class="btn btn-neutral" onclick="location.reload()">Retour</button>
+    </div>
+
+    <div id="screen-game" class="hidden">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <button onclick="if(confirm('Quitter ?')) location.reload()" style="background:none; border:none; font-size:1.5rem;">🏠</button>
+            <h3 style="margin:0;"><span id="game-name">Jeu</span> <span id="round-num" style="font-size:0.8rem; color:#aaa;">(M1)</span></h3>
+            <span style="width:30px;"></span>
+        </div>
+
+        <div id="dealer-banner" class="hidden" style="text-align:center; background:#333; padding:5px; border-radius:15px; margin-bottom:10px; font-size:0.9rem;">
+            🃏 Donneur : <strong id="dealer-name"></strong>
+        </div>
+
+        <div id="game-container" style="padding-bottom: 80px;"></div>
+        <div id="game-total-banner" class="total-banner hidden"><span id="banner-text">Total</span></div>
+
+        <div class="floating-action">
+            <div id="action-btn-container"></div>
+        </div>
+    </div>
+
+    <div id="screen-results" class="hidden">
+        <h1>🏆 Résultats Finaux</h1>
+        <table id="results-table"><tbody id="results-body"></tbody></table>
+        <br><button class="btn btn-neutral" onclick="location.reload()">Menu</button>
+    </div>
+
+    <script src="skullking.js"></script>
+    <script src="papayoo.js"></script>
+    <script src="tarot.js"></script>
+    <script src="belote.js"></script>
+    <script src="skyjo.js"></script>
+    <script src="rami.js"></script>
+    <script src="sixquiprend.js"></script>
+    <script src="dice.js"></script>
+    <script src="starrealms.js"></script>
+    <script src="main.js"></script>
+   
+    <script>
+        if ('serviceWorker' in navigator) { navigator.serviceWorker.register('./sw.js').catch(console.log); }
+    </script>
+</body>
+</html>
