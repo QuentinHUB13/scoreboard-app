@@ -31,6 +31,12 @@ const app = {
         this.state.round = 1;
         this.state.dealerIdx = 0;
        
+        // 1. CHANGEMENT DYNAMIQUE DU FOND
+        // On retire toutes les anciennes classes bg-
+        document.body.className = ''; 
+        // On ajoute la nouvelle classe
+        document.body.classList.add('bg-' + type);
+
         const title = document.getElementById('setup-title');
         const btn = document.getElementById('btn-start');
         const info = document.getElementById('setup-info');
@@ -235,6 +241,35 @@ const app = {
             let icon = (i===0) ? '🏆 ' : (i===1 ? '🥈 ' : (i===2 ? '🥉 ' : ''));
             tbody.innerHTML += `<tr><td class="${style}">${icon}${p.name}</td><td style="text-align:right;font-weight:bold;">${p.score}</td></tr>`;
         });
+
+        // 2. EFFET CONFETTI (Le "Juice")
+        // Lance une explosion de confettis depuis le bas de l'écran
+        const duration = 3000;
+        const end = Date.now() + duration;
+
+        (function frame() {
+            confetti({
+                particleCount: 5,
+                angle: 60,
+                spread: 55,
+                origin: { x: 0 },
+                colors: ['#ff0000', '#00ff00', '#0000ff'] // Couleurs festives
+            });
+            confetti({
+                particleCount: 5,
+                angle: 120,
+                spread: 55,
+                origin: { x: 1 },
+                colors: ['#ff0000', '#00ff00', '#0000ff']
+            });
+
+            if (Date.now() < end) {
+                requestAnimationFrame(frame);
+            }
+        }());
+        
+        // Reset du fond d'écran (optionnel, ou on le garde pour le style)
+        // document.body.className = ''; 
     },
 
     showScreen: function(id) {
@@ -244,3 +279,14 @@ const app = {
         document.getElementById(id).classList.remove('hidden');
     }
 };
+
+// --- EFFET HAPTIQUE GLOBAL ---
+// Dès qu'on clique sur un bouton, le téléphone vibre très légèrement (5ms)
+document.addEventListener('click', function(e) {
+    // Si l'élément cliqué est un bouton ou à l'intérieur d'un bouton
+    if (e.target.closest('button')) {
+        if (navigator.vibrate) {
+            navigator.vibrate(10); // Vibration ultra-courte (10ms)
+        }
+    }
+});
