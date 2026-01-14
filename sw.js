@@ -1,4 +1,4 @@
-const CACHE_NAME = "score-app-final-v2.0";
+const CACHE_NAME = "score-app-final-v2.1";
 const ASSETS_TO_CACHE = [
     "./",
     "./index.html",
@@ -39,3 +39,4 @@ self.addEventListener("fetch", (e) => {
     );
 
 });
+
