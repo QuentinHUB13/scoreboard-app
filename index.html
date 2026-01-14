@@ -9,7 +9,10 @@
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="apple-touch-icon" href="icon.png">
     <meta name="theme-color" content="#121212">
-
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap"rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
     <style>
         :root {
             --bg: #121212; --surface: #1e1e1e; --text: #ffffff;
@@ -25,10 +28,67 @@
             --success: #43a047;
             --error: #e53935;
             --disabled: #444;
+
+            /* GLASSMORPHISM VARS */
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            --glass-blur: blur(12px);
         }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 15px; padding-bottom: 120px; -webkit-tap-highlight-color: transparent; }
-        h1, h2, h3 { text-align: center; margin: 10px 0; }
+        body {
+            /* 3. FOND PAR DÉFAUT (GRIS FONCÉ MODERNE) */
+            background-color: #121212;
+            background-image: radial-gradient(circle at 50% 0%, #2a2a2a, #121212);
+            background-attachment: fixed; /* Le fond ne bouge pas */
+            color: #eee;
+            font-family: 'Poppins', sans-serif; /* Application de la police */
+            margin: 0;
+            padding: 20px;
+            /* Transition fluide lors du changement de couleur de fond */
+            transition: background 0.8s ease; 
+        }
+
+        /* --- CLASSES DE FONDS DYNAMIQUES --- */
+        body.bg-skullking { background: linear-gradient(135deg, #1a237e, #000000); } /* Océan Profond */
+        body.bg-papayoo { background: linear-gradient(135deg, #e65100, #3e2723); } /* Lave */
+        body.bg-tarot { background: linear-gradient(135deg, #4a148c, #000000); } /* Mystique */
+        body.bg-belote { background: linear-gradient(135deg, #1b5e20, #004d40); } /* Tapis Vert */
+        body.bg-skyjo { background: linear-gradient(135deg, #00695c, #004d40); } /* Sarcelle */
+        body.bg-rami { background: linear-gradient(135deg, #283593, #1a237e); } /* Bleu roi */
+        body.bg-six { background: linear-gradient(135deg, #f57f17, #bf360c); } /* Taureau */
+        body.bg-dice { background: linear-gradient(135deg, #880e4f, #212121); } /* Casino */
+        body.bg-starrealms { background: linear-gradient(135deg, #000000, #1b5e20); } /* Espace */
+
+        h1, h2, h3 { font-weight: 800; letter-spacing: -0.5px; text-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        button { font-family: 'Poppins', sans-serif; }
+
         .hidden { display: none !important; }
+
+        /* --- GLASSMORPHISM POUR LES CARTES --- */
+        .player-card, .game-card, .sr-zone {
+            background: var(--glass-bg) !important; /* Force la transparence */
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border: var(--glass-border) !important;
+            box-shadow: var(--glass-shadow);
+            border-radius: 16px;
+            margin-bottom: 15px;
+            padding: 15px;
+            position: relative;
+            overflow: hidden;
+            /* Petit éclat brillant en haut */
+            border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
+        }
+
+        /* Amélioration des Inputs */
+        input[type="text"], input[type="number"] {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid #555;
+            border-radius: 8px;
+            color: white;
+            padding: 10px;
+            font-family: 'Poppins', sans-serif;
+        }
 
         /* INPUTS & BTNS */
         .btn { border: none; padding: 15px; border-radius: 12px; font-size: 1.1rem; font-weight: bold; width: 100%; cursor: pointer; color: white; margin-bottom: 10px; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
