@@ -6,7 +6,6 @@ const skullKingGame = {
         });
 
         // 2. Zone Kraken (Global pour la manche)
-        // On stocke la valeur actuelle dans un data-attribute ou on la lit par défaut à 0
         const currentKraken = document.getElementById('sk-kraken-count') ? document.getElementById('sk-kraken-count').value : 0;
        
         container.innerHTML += `
@@ -15,10 +14,10 @@ const skullKingGame = {
                 <span style="font-weight:bold; color:#e1bee7;">🐙 Kraken (Plis détruits)</span>
                 <div class="sk-stepper">
                     <button class="sk-btn-step" onclick="skullKingGame.updKraken(-1)">-</button>
-                    <span class="sk-val" id="sk-kraken-val">0</span>
+                    <span class="sk-val" id="sk-kraken-val">${currentKraken}</span>
                     <button class="sk-btn-step" onclick="skullKingGame.updKraken(1)">+</button>
                 </div>
-                <input type="hidden" id="sk-kraken-count" value="0">
+                <input type="hidden" id="sk-kraken-count" value="${currentKraken}">
             </div>
         </div>`;
 
@@ -97,22 +96,7 @@ const skullKingGame = {
         this.render(container);
     },
 
-    // Mise à jour spécifique pour le Kraken (Global)
-    updKraken: function(d) {
-        const input = document.getElementById('sk-kraken-count');
-        const disp = document.getElementById('sk-kraken-val');
-        let v = parseInt(input.value) + d;
-        if (v < 0) v = 0;
-        if (v > app.state.round) v = app.state.round; // Impossible de détruire plus de plis que la manche
-        input.value = v;
-        disp.innerText = v;
-        this.checkTotal();
-    },
-
-    // Mise à jour spécifique pour le select Pari Rascal
-    updRascalBet: function(idx, val) {
-        app.state.players[idx].bonusRascalBet = parseInt(val);
-    },
+    // --- FONCTIONS UTILITAIRES (Nécessaires pour les boutons) ---
 
     upd: function(i, fld, d) {
         const p = app.state.players[i];
@@ -121,11 +105,9 @@ const skullKingGame = {
         if(nv < 0) return;
         if((fld==='bet'||fld==='made') && nv > app.state.round) return;
         if((fld==='bonusSK'||fld==='bonus14Black') && nv > 1) return;
-       
-        // Limites Cartes
         if(fld==='bonusSir' && nv > 2) return;
         if(fld==='bonusPir' && nv > 6) return;
-        if(fld==='bonusLoot' && nv > 2) return; // Max 2 trésors
+        if(fld==='bonusLoot' && nv > 2) return;
 
         p[fld] = nv;
         document.getElementById(`sk-${fld}-${i}`).innerText = nv;
@@ -133,12 +115,27 @@ const skullKingGame = {
         if (fld === 'made') this.checkTotal();
     },
 
+    updKraken: function(d) {
+        const input = document.getElementById('sk-kraken-count');
+        const disp = document.getElementById('sk-kraken-val');
+        let v = parseInt(input.value) + d;
+        if (v < 0) v = 0;
+        if (v > app.state.round) v = app.state.round;
+        input.value = v;
+        disp.innerText = v;
+        this.checkTotal();
+    },
+
+    updRascalBet: function(idx, val) {
+        app.state.players[idx].bonusRascalBet = parseInt(val);
+    },
+
     checkTotal: function() {
         let totalMade = 0;
         app.state.players.forEach(p => totalMade += p.made);
        
-        const krakenCount = parseInt(document.getElementById('sk-kraken-count').value) || 0;
-        const target = app.state.round - krakenCount; // C'est ici que le Kraken agit
+        const krakenCount = document.getElementById('sk-kraken-count') ? parseInt(document.getElementById('sk-kraken-count').value) : 0;
+        const target = app.state.round - krakenCount;
 
         const banner = document.getElementById('game-total-banner');
         banner.classList.remove('hidden');
@@ -162,20 +159,20 @@ const skullKingGame = {
         }
     },
 
+    // --- VALIDATION ET CALCULS ---
+
     validate: function() {
-        // 1. CHECKPOINT ! (On sauvegarde l'état AVANT de calculer les nouveaux scores)
-        app.createCheckpoint(); 
+        // 1. CHECKPOINT
+        app.createCheckpoint();
         const mode = app.state.skMode;
         const round = app.state.round;
 
         app.state.players.forEach(p => {
             let pts = 0;
-            // Calcul Bonus
-            // - Les anciens
+            // Calcul Bonus Total
             let bTotal = (p.bonusSir*20)+(p.bonusPir*30)+(p.bonusSK*50)+(p.bonus14Std*10)+(p.bonus14Black*20);
-            // - Les nouveaux
-            bTotal += (p.bonusLoot * 20); // Trésor = 20 pts
-            bTotal += p.bonusRascalBet;   // Pari Rascal = Valeur directe (-20, -10, 10, 20)
+            bTotal += (p.bonusLoot * 20);
+            bTotal += p.bonusRascalBet;
 
             // --- MODE RASCAL ---
             if (mode === 'rascal') {
@@ -208,21 +205,15 @@ const skullKingGame = {
             else {
                 if (p.bet === 0) {
                     pts = (p.made === 0) ? (round * 10) : (round * -10);
-                    // En classique, Pari 0 réussi = on garde les bonus ?
-                    // Règle standard : Oui, sauf si le bonus implique de faire un pli (Pirate/Mermaid).
-                    // Mais Loot/RascalBet sont indépendants des plis. On ajoute bTotal.
-                    if (p.made === 0) pts += bTotal;
+                    // MODIF : On ajoute les bonus même si le pari 0 est raté
+                    pts += bTotal;
                 } else {
                     if (p.bet === p.made) {
                         pts = (p.bet * 20) + bTotal;
                     } else {
                         pts = Math.abs(p.bet - p.made) * -10;
-                        // En cas de chute classique, les bonus sont souvent perdus ou comptés négativement selon variantes.
-                        // Par simplicité ici : Chute = 0 bonus gagnés (mais on ne soustrait pas les bonus).
-                        // Seul le Pari Rascal Négatif devrait compter ?
-                        // Simplification : On n'ajoute pas les bonus positifs en cas d'échec pari > 0.
-                        // Mais si Pari Rascal est négatif, il devrait s'appliquer ?
-                        // Pour rester simple : En cas d'échec classique, score = différence * -10. Point.
+                        // MODIF : On ajoute les bonus même si le pari est raté
+                        pts += bTotal;
                     }
                 }
             }
@@ -239,5 +230,4 @@ const skullKingGame = {
         if (app.state.round >= 10) app.finishGame();
         else app.nextRound();
     }
-
 };
