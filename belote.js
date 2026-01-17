@@ -130,6 +130,8 @@ const beloteGame = {
     // --- VALIDATION & CALCUL ---
 
     validate: function() {
+        // 1. CHECKPOINT ! (On sauvegarde l'état AVANT de calculer les nouveaux scores)
+        app.createCheckpoint(); 
         // Indices des équipes
         const takerIdx = parseInt(document.getElementById('b-taker').value); // L'index du preneur dans le tableau players
         const defIdx = takerIdx === 0 ? 1 : 0; // L'index de l'adversaire
@@ -229,4 +231,5 @@ const beloteGame = {
             app.nextRound();
         }
     }
+
 };
