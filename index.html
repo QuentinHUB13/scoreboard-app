@@ -14,59 +14,112 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
     <style>
+               /* =========================================
+        1. VARIABLES & CONFIGURATION
+        ========================================= */
         :root {
+            /* Couleurs de base */
             --bg: #121212; --surface: #1e1e1e; --text: #ffffff;
-            --primary: #8e24aa; /* Skull King */
-            --secondary: #d32f2f; /* Papayoo */
-            --tertiary: #00acc1; /* Tarot */
-            --quaternary: #2e7d32; /* Belote Green */
-            --quinary: #00897b; /* Skyjo Teal */
-            --col-rami: #3949ab; /* Indigo */
-            --col-six: #fbc02d; /* Yellow Bull */
-            --col-dice: #ec407a; /* Rose/Rouge flashy */
-            --col-sr: #4caf50; /* Green Space */
-            --success: #43a047;
-            --error: #e53935;
-            --disabled: #444;
+            --success: #43a047; --error: #e53935; --disabled: #444;
 
-            /* GLASSMORPHISM VARS */
-            --glass-bg: rgba(255, 255, 255, 0.08);
+            /* Couleurs par Jeu */
+            --primary: #8e24aa;    /* Skull King */
+            --secondary: #d32f2f;  /* Papayoo */
+            --tertiary: #00acc1;   /* Tarot */
+            --quaternary: #2e7d32; /* Belote Green */
+            --quinary: #00897b;    /* Skyjo Teal */
+            --col-rami: #3949ab;   /* Indigo */
+            --col-six: #fbc02d;    /* Yellow Bull */
+            --col-dice: #ec407a;   /* Rose/Rouge flashy */
+            --col-sr: #4caf50;     /* Star Realms Green */
+
+            /* GLASSMORPHISM (Design v2) */
+            --glass-bg: rgba(30, 30, 30, 0.6); /* Fond semi-transparent */
             --glass-border: 1px solid rgba(255, 255, 255, 0.1);
             --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
             --glass-blur: blur(12px);
         }
+
+        /* =========================================
+        2. STRUCTURE & FONDS DYNAMIQUES
+        ========================================= */
+        html { height: 100%; }
+
         body {
-            /* 3. FOND PAR DÉFAUT (GRIS FONCÉ MODERNE) */
+            min-height: 100vh; /* Force le fond à aller jusqu'en bas */
             background-color: #121212;
             background-image: radial-gradient(circle at 50% 0%, #2a2a2a, #121212);
-            background-attachment: fixed; /* Le fond ne bouge pas */
+            background-attachment: fixed; /* Le fond reste fixe au scroll */
+            background-size: cover;
+        
             color: #eee;
-            font-family: 'Poppins', sans-serif; /* Application de la police */
+            font-family: 'Poppins', sans-serif; /* Nouvelle Police */
             margin: 0;
-            padding: 20px;
-            /* Transition fluide lors du changement de couleur de fond */
-            transition: background 0.8s ease; 
+            box-sizing: border-box;
+            padding: 15px;
+            padding-bottom: 80px; /* Espace pour le bouton flottant */
+            transition: background-image 0.6s ease-in-out;
         }
 
-        /* --- CLASSES DE FONDS DYNAMIQUES --- */
-        body.bg-skullking { background: linear-gradient(135deg, #1a237e, #000000); } /* Océan Profond */
-        body.bg-papayoo { background: linear-gradient(135deg, #e65100, #3e2723); } /* Lave */
-        body.bg-tarot { background: linear-gradient(135deg, #4a148c, #000000); } /* Mystique */
-        body.bg-belote { background: linear-gradient(135deg, #1b5e20, #004d40); } /* Tapis Vert */
-        body.bg-skyjo { background: linear-gradient(135deg, #00695c, #004d40); } /* Sarcelle */
-        body.bg-rami { background: linear-gradient(135deg, #283593, #1a237e); } /* Bleu roi */
-        body.bg-six { background: linear-gradient(135deg, #f57f17, #bf360c); } /* Taureau */
-        body.bg-dice { background: linear-gradient(135deg, #880e4f, #212121); } /* Casino */
-        body.bg-starrealms { background: linear-gradient(135deg, #000000, #1b5e20); } /* Espace */
+        /* Classes pour changer le fond selon le jeu */
+        body.bg-skullking { background-image: linear-gradient(135deg, #0d47a1, #000000); }
+        body.bg-papayoo { background-image: linear-gradient(135deg, #bf360c, #3e2723); }
+        body.bg-tarot { background-image: linear-gradient(135deg, #4a148c, #000000); }
+        body.bg-belote { background-image: linear-gradient(135deg, #1b5e20, #004d40); }
+        body.bg-skyjo { background-image: linear-gradient(135deg, #00695c, #004d40); }
+        body.bg-rami { background-image: linear-gradient(135deg, #1565c0, #0d47a1); }
+        body.bg-six { background-image: linear-gradient(135deg, #f9a825, #e65100); }
+        body.bg-dice { background-image: linear-gradient(135deg, #880e4f, #212121); }
+        body.bg-starrealms { background-image: linear-gradient(135deg, #000000, #1b5e20); }
 
-        h1, h2, h3 { font-weight: 800; letter-spacing: -0.5px; text-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        /* Typographie */
+        h1, h2, h3 { font-weight: 800; letter-spacing: -0.5px; text-shadow: 0 4px 10px rgba(0,0,0,0.5); margin-top: 0; }
         button { font-family: 'Poppins', sans-serif; }
-
         .hidden { display: none !important; }
 
-        /* --- GLASSMORPHISM POUR LES CARTES --- */
-        .player-card, .game-card, .sr-zone {
-            background: var(--glass-bg) !important; /* Force la transparence */
+        /* =========================================
+        3. COMPOSANTS UI (Inputs, Boutons)
+        ========================================= */
+        /* Inputs Modernes Glass */
+        input[type="text"], input[type="number"], select {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            color: white;
+            padding: 12px;
+            font-family: 'Poppins', sans-serif;
+            width: 100%;
+            box-sizing: border-box;
+            font-size: 1.1rem;
+            outline: none;
+            margin-bottom: 10px;
+        }
+        input:focus { border-color: var(--primary); background: rgba(0, 0, 0, 0.6); }
+
+        /* Boutons Généraux */
+        .btn { border: none; padding: 15px; border-radius: 12px; font-size: 1.1rem; font-weight: bold; width: 100%; cursor: pointer; color: white; margin-bottom: 10px; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .btn:disabled { background: var(--disabled) !important; opacity: 0.5; cursor: not-allowed; }
+        .btn:active { transform: scale(0.98); }
+    
+        .btn-row { display: flex; gap: 10px; }
+    
+        /* Couleurs Boutons */
+        .btn-neutral { background: #444; }
+        .btn-sk { background: linear-gradient(45deg, #6a1b9a, #8e24aa); }
+        .btn-pap { background: linear-gradient(45deg, #c62828, #d32f2f); }
+        .btn-tarot { background: linear-gradient(45deg, #00838f, #00acc1); }
+        .btn-belote { background: linear-gradient(45deg, #2e7d32, #43a047); }
+        .btn-skyjo { background: linear-gradient(45deg, #00897b, #26a69a); }
+        .btn-rami { background: linear-gradient(45deg, #3949ab, #5c6bc0); }
+        .btn-dice { background: linear-gradient(45deg, #ec407a, #d81b60); }
+        .btn-sr { background: linear-gradient(45deg, #1b5e20, #4caf50); }
+        .btn-six { background: linear-gradient(45deg, #f57f17, #fbc02d); color: black; }
+
+        /* =========================================
+        4. CARTES & GLASSMORPHISM
+        ========================================= */
+        .game-card, .player-card {
+            background: var(--glass-bg) !important;
             backdrop-filter: var(--glass-blur);
             -webkit-backdrop-filter: var(--glass-blur);
             border: var(--glass-border) !important;
@@ -76,87 +129,63 @@
             padding: 15px;
             position: relative;
             overflow: hidden;
-            /* Petit éclat brillant en haut */
             border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
         }
-
-        /* Amélioration des Inputs */
-        input[type="text"], input[type="number"] {
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid #555;
-            border-radius: 8px;
-            color: white;
-            padding: 10px;
-            font-family: 'Poppins', sans-serif;
-        }
-
-        /* INPUTS & BTNS */
-        .btn { border: none; padding: 15px; border-radius: 12px; font-size: 1.1rem; font-weight: bold; width: 100%; cursor: pointer; color: white; margin-bottom: 10px; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        .btn:disabled { background: var(--disabled) !important; opacity: 0.5; cursor: not-allowed; }
-        .btn-sk { background: linear-gradient(45deg, #6a1b9a, #8e24aa); }
-        .btn-pap { background: linear-gradient(45deg, #c62828, #d32f2f); }
-        .btn-tarot { background: linear-gradient(45deg, #00838f, #00acc1); }
-        .btn-neutral { background: #444; }
-        .btn-row { display: flex; gap: 10px; }
-        .btn-belote { background: linear-gradient(45deg, #2e7d32, #43a047); }
-        .btn-skyjo { background: linear-gradient(45deg, #00897b, #26a69a); }
-        .btn-rami { background: linear-gradient(45deg, #3949ab, #5c6bc0); }
-        .btn-dice { background: linear-gradient(45deg, #ec407a, #d81b60); }
-        .btn-sr { background: linear-gradient(45deg, #1b5e20, #4caf50); }
-        .btn-six { background: linear-gradient(45deg, #f57f17, #fbc02d); color: black; } /* Texte noir pour le jaune */
-        input, select { padding: 15px; border-radius: 10px; border: 1px solid #444; background: #2c2c2c; color: white; font-size: 1.1rem; width: 100%; box-sizing: border-box; margin-bottom: 10px; }
-
-        /* CARDS */
-        .game-card { background: var(--surface); padding: 20px; border-radius: 15px; margin-bottom: 20px; text-align: center; border: 1px solid #333; }
+    
+        .game-card { text-align: center; cursor: pointer; transition: transform 0.2s; }
+        .game-card:active { transform: scale(0.98); }
         .game-icon { font-size: 3rem; display: block; margin-bottom: 10px; }
-        .player-card { background-color: var(--surface); padding: 15px; margin-bottom: 15px; border-radius: 12px; border-left: 5px solid #555; }
-        .player-header { display: flex; justify-content: space-between; font-weight: bold; font-size: 1.2rem; margin-bottom: 5px; border-bottom: 1px solid #333; padding-bottom: 8px; }
+    
+        .player-card { border-left: 5px solid #555; }
+        .player-header { display: flex; justify-content: space-between; font-weight: bold; font-size: 1.2rem; margin-bottom: 5px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; }
 
-        /* SPECIFIC UI ELEMENTS */
+        /* =========================================
+        5. UI JEUX SPÉCIFIQUES
+        ========================================= */
+        /* Skull King & General Steppers */
         .sk-control-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-        .sk-stepper { display: flex; align-items: center; background: #2b2b2b; border-radius: 20px; }
-        .sk-btn-step { width: 44px; height: 44px; background: #3d3d3d; border: none; color: white; font-size: 1.3rem; border-radius: 50%; touch-action: manipulation; }
+        .sk-stepper { display: flex; align-items: center; background: rgba(0,0,0,0.3); border-radius: 20px; }
+        .sk-btn-step { width: 44px; height: 44px; background: rgba(255,255,255,0.1); border: none; color: white; font-size: 1.3rem; border-radius: 50%; }
         .sk-val { width: 35px; text-align: center; font-weight: bold; font-size: 1.1rem; }
 
+        /* Papayoo */
         .pap-input-row { display: flex; align-items: center; gap: 10px; }
         .pap-input { width: 80px; text-align: center; font-weight: bold; font-size: 1.3rem; }
-        .btn-magic { background: none; border: 1px solid #444; color: #ffd700; border-radius: 8px; padding: 10px; font-size: 1.2rem; }
 
-        .tarot-board { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 20px; background: #263238; padding: 10px; border-radius: 10px; }
-        .tarot-score-pill { background: #37474f; padding: 8px 12px; border-radius: 20px; font-size: 0.9rem; border: 1px solid var(--tertiary); min-width: 80px; text-align: center; }
+        /* Tarot */
+        .tarot-board { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 20px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 10px; }
+        .tarot-score-pill { background: rgba(255,255,255,0.1); padding: 8px 12px; border-radius: 20px; font-size: 0.9rem; border: 1px solid var(--tertiary); min-width: 80px; text-align: center; }
         .tarot-segment { display: flex; gap: 5px; margin-bottom: 15px; overflow-x: auto; }
-        .segment-btn { flex: 1; background: #333; border: 1px solid #555; padding: 10px; color: #aaa; border-radius: 8px; white-space: nowrap; }
+        .segment-btn { flex: 1; background: rgba(0,0,0,0.3); border: 1px solid #555; padding: 10px; color: #aaa; border-radius: 8px; white-space: nowrap; }
         .segment-btn.selected { background: var(--tertiary); color: white; border-color: var(--tertiary); font-weight: bold; }
 
-        /* BANNERS & FLOATING */
+        /* Dés */
+        .die-face { width: 60px; height: 60px; background: #eee; color: #333; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: bold; box-shadow: 0 4px 0 #bbb; border: 2px solid #333; }
+        .dice-rolling { font-size: 2rem; animation: pulse 0.5s infinite; }
+        @keyframes pulse { 0% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        /* Bannière Flottante */
         .total-banner { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: #111; padding: 10px 25px; border-radius: 30px; font-weight: bold; font-size: 1.1rem; border: 2px solid #333; z-index: 99; white-space: nowrap; }
         .sum-ok { color: var(--success); border-color: var(--success); }
         .sum-bad { color: var(--error); border-color: var(--error); }
-        .floating-action { position: fixed; bottom: 0; left: 0; right: 0; padding: 15px; background: linear-gradient(to top, var(--bg) 90%, transparent); z-index: 100; }
-       
-        /* TABLE */
+        .floating-action { position: fixed; bottom: 0; left: 0; right: 0; padding: 15px; background: linear-gradient(to top, #121212 80%, transparent); z-index: 100; }
+
+        /* Table Résultats */
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        td { padding: 12px; border-bottom: 1px solid #333; }
+        td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); }
         .rank-1 { color: #ffd700; font-weight: bold; }
 
-        /* Style des dés affichés */
-        .die-face {
-            width: 60px; height: 60px;
-            background: #eee; color: #333;
-            border-radius: 12px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.8rem; font-weight: bold;
-            box-shadow: 0 4px 0 #bbb; /* Effet 3D */
-            border: 2px solid #333;
-        }
-        .dice-rolling { font-size: 2rem; animation: pulse 0.5s infinite; }
-        @keyframes pulse { 0% { opacity: 0.5; } 100% { opacity: 1; } } 
-
-        /* La Zone (Cadre) */
+        /* =========================================
+        6. STAR REALMS (LAYOUT COMPLET & DESIGN)
+        ========================================= */
         .sr-zone {
-            background: #000;
-            border: 2px solid #333;
-            border-radius: 12px;
+            /* Glassmorphism forcé */
+            background: var(--glass-bg) !important;
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border: var(--glass-border) !important;
+            box-shadow: var(--glass-shadow);
+            border-radius: 16px;
             box-sizing: border-box;
             margin: 0;
         
@@ -165,9 +194,9 @@
             align-items: center;
             overflow: hidden;
             position: relative;
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
         }
 
+        /* Conteneur de ligne (Pour 4 joueurs) */
         .sr-row-container {
             flex: 1;
             display: flex;
@@ -176,6 +205,7 @@
             width: 100%;
         }
 
+        /* Conteneur interne pour rotation */
         .sr-inner-layout {
             display: flex;
             flex-direction: column;
@@ -186,106 +216,48 @@
             transition: transform 0.3s ease;
         }
 
-        /* --- ROTATIONS --- */
-
-        /* 2 Joueurs : Joueur du haut inversé (180°) */
+        /* -- ROTATIONS -- */
+        /* 2 Joueurs : Joueur du haut inversé */
         .sr-rotate-180 { transform: rotate(180deg); }
+        /* 4 Joueurs : Zones Gauche (Haut->Bas) */
+        .sr-rotate-90 { transform: rotate(90deg); width: 300%; }
+        /* 4 Joueurs : Zones Droite (Bas->Haut) */
+        .sr-rotate-minus-90 { transform: rotate(-90deg); width: 300%; }
 
-        /* 4 Joueurs : Zones de Gauche (1 & 3) -> Texte Haut vers Bas */
-        .sr-rotate-90 {
-            transform: rotate(90deg);
-            width: 300%; /* Très large pour ne pas être coupé */
-        }
+        /* -- CONTENU SR -- */
+        .sr-info { width: 100%; display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 5px; }
+        .sr-name { font-weight: bold; font-size: 1.3rem; color: #eee; text-shadow: 2px 2px 0 #000; white-space: nowrap; transition: all 0.3s ease; }
+        .sr-delta { color: #fff; background: #333; padding: 2px 6px; border-radius: 6px; font-weight:bold; font-size:0.9rem; animation: fadeIn 0.2s; border: 1px solid #777; }
 
-        /* 4 Joueurs : Zones de Droite (2 & 4) -> Texte Bas vers Haut */
-        .sr-rotate-minus-90 {
-            transform: rotate(-90deg);
-            width: 300%;
-        }
-
-        .sr-info {
-            width: 100%;
-            display: flex; justify-content: center; align-items: center; gap: 10px;
-            margin-bottom: 5px;
-        }
-
-        /* --- TEXTE ET BOUTONS --- */
-
-        /* Styles Normaux */
         .sr-score {
-            font-size: 4rem;
-            font-weight: bold; line-height: 1;
-            text-shadow: 0 0 15px rgba(0,0,0,0.9);
-            margin: 5px 0;
+            font-size: 4rem; font-weight: bold; line-height: 1;
+            text-shadow: 0 0 15px rgba(0,0,0,0.9); margin: 5px 0;
             transition: all 0.3s ease;
         }
 
-        /* --- BOUTONS ET CONTENEURS --- */
-
+        /* BOUTONS SR : Centrés et Flexibles */
         .sr-controls {
-            display: flex;
-            gap: 8px; /* Espace entre les boutons */
-            width: 95%; /* Prend toute la largeur disponible dans la zone */
-            margin-top: 5px;
-            justify-content: center;
+            display: flex; gap: 8px; width: 95%; margin-top: 5px; justify-content: center;
         }
 
         .sr-btn {
-            /* POSITIONNEMENT : Le retour du flex:1 pour qu'ils remplissent la ligne */
-            flex: 1;
-        
-            height: 45px; /* Hauteur fixe confortable */
-            padding: 0; /* On retire le padding qui décalait le texte */
-        
-            /* CENTRAGE DU TEXTE DANS LE BOUTON */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        
-            /* ESTHÉTIQUE */
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            font-size: 1.1rem;
-            cursor: pointer;
-            color: white;
+            flex: 1; /* Remplit l'espace */
+            height: 45px;
+            padding: 0;
+            display: flex; justify-content: center; align-items: center; /* Centre le texte */
+            border: none; border-radius: 8px; font-weight: bold; font-size: 1.1rem; cursor: pointer; color: white;
             box-shadow: 0 4px 5px rgba(0,0,0,0.5);
             transition: all 0.2s ease;
         }
-
         .sr-btn:active { transform: scale(0.95); }
         .sr-btn.minus { background: linear-gradient(to bottom, #d32f2f, #b71c1c); }
         .sr-btn.plus { background: linear-gradient(to bottom, #388e3c, #1b5e20); }
 
-        
-        .sr-name {
-            font-weight: bold; font-size: 1.3rem; color: #eee;
-            text-shadow: 2px 2px 0 #000; white-space: nowrap;
-            transition: all 0.3s ease;
-        }
-
-        .sr-delta {
-            color: #fff; background: #333; padding: 2px 6px;
-            border-radius: 6px; font-weight:bold; font-size:0.9rem;
-            animation: fadeIn 0.2s; border: 1px solid #777;
-        }
-        
-        /* --- MODE EXPANDED (Quand un joueur est seul sur sa ligne) --- */
-        .sr-zone.sr-expanded .sr-controls {
-            width: 90%; /* Un peu moins large pour faire joli quand c'est géant */
-            gap: 15px;
-        }
-
-        .sr-zone.sr-expanded .sr-btn {
-            height: 70px; /* Boutons géants */
-            font-size: 1.8rem;
-            border-radius: 15px;
-        } 
-
-        /* --- MODE EXPANDED (Seul sur la ligne) --- */
+        /* -- MODE EXPANDED (Seul sur la ligne) -- */
         .sr-zone.sr-expanded .sr-score { font-size: 7rem; margin: 15px 0; }
         .sr-zone.sr-expanded .sr-name { font-size: 2rem; }
-
+        .sr-zone.sr-expanded .sr-controls { width: 90%; gap: 15px; }
+        .sr-zone.sr-expanded .sr-btn { height: 70px; font-size: 1.8rem; border-radius: 15px; }
     </style>
 </head>
 <body>
@@ -379,4 +351,5 @@
     </script>
 </body>
 </html>
+
 
