@@ -163,6 +163,8 @@ const skullKingGame = {
     },
 
     validate: function() {
+        // 1. CHECKPOINT ! (On sauvegarde l'état AVANT de calculer les nouveaux scores)
+        app.createCheckpoint(); 
         const mode = app.state.skMode;
         const round = app.state.round;
 
@@ -237,4 +239,5 @@ const skullKingGame = {
         if (app.state.round >= 10) app.finishGame();
         else app.nextRound();
     }
+
 };
