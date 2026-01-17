@@ -139,7 +139,9 @@ const starRealmsGame = {
             this.pendingDeltas[p.name] = 0;
             this.render(document.getElementById('game-container'));
         }, 1500);
-
+        // SAUVEGARDE IMMEDIATE POUR STAR REALMS 
+        app.saveGame();  
         this.render(document.getElementById('game-container'));
     }
+
 };
