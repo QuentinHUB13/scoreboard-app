@@ -1,200 +1,140 @@
 const tarotGame = {
-    // État temporaire pour la manche en cours
-    current: {
-        taker: 0,      // Index du preneur
-        partner: -1,   // Index du partenaire (si 5 joueurs)
-        contract: 1,   // 1=Petite, 2=Garde, 4=Garde Sans, 6=Garde Contre
-        oudlers: 0,    // Nombre de bouts (0, 1, 2, 3)
-        points: 0,     // Points faits par l'attaque
-        petit: 0,      // 0=Non, 1=Attaque, -1=Défense
-        poignee: 0,    // 0=Non, 20=Simple, 30=Double, 40=Triple
-        chelem: 0      // 0=Non, 200=Annoncé/Réalisé, etc. (Simplifié ici à bonus)
-    },
+    OUDLERS: { 0: 56, 1: 51, 2: 41, 3: 36 },
+    CONTRATS: { 'P': 1, 'G': 2, 'GS': 4, 'GC': 6 },
 
     render: function(container) {
-        const pCount = app.state.players.length;
-        const c = this.current;
+        // 1. Scoreboard Top
+        let scoresHtml = '<div class="tarot-board">';
+        app.state.players.forEach(p => scoresHtml += `<div class="tarot-score-pill"><span>${p.name}</span><span style="display:block;font-weight:bold;font-size:1.1rem">${p.score}</span></div>`);
+        scoresHtml += '</div>';
 
-        // --- 1. SÉLECTION DU PRENEUR ---
-        let html = `<h3 style="margin-bottom:10px; text-align:center;">Qui a pris ?</h3>
-                    <div class="tarot-board">`;
-       
-        app.state.players.forEach((p, i) => {
-            const isSel = (c.taker === i) ? 'border-color:var(--tertiary); background:var(--tertiary); color:white;' : 'background:rgba(255,255,255,0.05);';
-            html += `<div onclick="tarotGame.setTaker(${i})" style="${isSel} padding:10px; border-radius:8px; cursor:pointer; border:1px solid #555; min-width:80px; text-align:center;">
-                        ${p.name}
-                     </div>`;
-        });
-        html += `</div>`;
-
-        // --- 2. SÉLECTION DU PARTENAIRE (SI 5 JOUEURS) ---
-        if (pCount === 5) {
-            html += `<h3 style="margin-bottom:10px; text-align:center;">Appel au Roi (Partenaire)</h3>
-                     <div class="tarot-board">`;
-            app.state.players.forEach((p, i) => {
-                if (i === c.taker) return; // On ne peut pas s'appeler soi-même
-                const isSel = (c.partner === i) ? 'border-color:var(--secondary); background:var(--secondary); color:white;' : 'background:rgba(255,255,255,0.05);';
-                html += `<div onclick="tarotGame.setPartner(${i})" style="${isSel} padding:10px; border-radius:8px; cursor:pointer; border:1px solid #555; min-width:80px; text-align:center;">
-                            ${p.name}
-                         </div>`;
-            });
-            html += `</div>`;
+        // 2. Formulaire
+        let options = app.state.players.map((p,i) => `<option value="${i}">${p.name}</option>`).join('');
+        let partnerHtml = '';
+        // Si 5 joueurs, on affiche le choix du partenaire
+        if (app.state.players.length === 5) {
+            partnerHtml = `<label>Partenaire (Appel au Roi)</label><select id="t-partner"><option value="-1">Aucun (Seul)</option>${options}</select>`;
         }
 
-        // --- 3. CONTRAT ---
-        html += `<div style="margin-bottom:15px;">
-                    <div style="text-align:center; color:#aaa; margin-bottom:5px;">Contrat</div>
-                    <div class="tarot-segment">
-                        <button class="segment-btn ${c.contract===1?'selected':''}" onclick="tarotGame.setContract(1)">Petite (x1)</button>
-                        <button class="segment-btn ${c.contract===2?'selected':''}" onclick="tarotGame.setContract(2)">Garde (x2)</button>
-                        <button class="segment-btn ${c.contract===4?'selected':''}" onclick="tarotGame.setContract(4)">G.Sans (x4)</button>
-                        <button class="segment-btn ${c.contract===6?'selected':''}" onclick="tarotGame.setContract(6)">G.Contre (x6)</button>
-                    </div>
-                 </div>`;
+        container.innerHTML = `
+        ${scoresHtml}
+        <div class="player-card tarot-form" style="border-left-color: var(--tertiary)">
+            <label>Preneur</label><select id="t-taker">${options}</select>
+            ${partnerHtml}
+           
+            <label>Contrat</label>
+            <div class="tarot-segment">
+                <button class="segment-btn selected" onclick="tarotGame.sel(this,'P')">Petite</button>
+                <button class="segment-btn" onclick="tarotGame.sel(this,'G')">Garde</button>
+                <button class="segment-btn" onclick="tarotGame.sel(this,'GS')">G.Sans</button>
+                <button class="segment-btn" onclick="tarotGame.sel(this,'GC')">G.Contre</button>
+            </div>
+            <input type="hidden" id="t-contract" value="P">
 
-        // --- 4. RÉSULTAT (Bouts + Points) ---
-        html += `<div style="display:flex; gap:10px; margin-bottom:15px;">
-                    <div style="flex:1;">
-                        <div style="text-align:center; color:#aaa; margin-bottom:5px;">Bouts</div>
-                        <div class="tarot-segment">
-                            <button class="segment-btn ${c.oudlers===0?'selected':''}" onclick="tarotGame.setOudlers(0)">0</button>
-                            <button class="segment-btn ${c.oudlers===1?'selected':''}" onclick="tarotGame.setOudlers(1)">1</button>
-                            <button class="segment-btn ${c.oudlers===2?'selected':''}" onclick="tarotGame.setOudlers(2)">2</button>
-                            <button class="segment-btn ${c.oudlers===3?'selected':''}" onclick="tarotGame.setOudlers(3)">3</button>
-                        </div>
-                    </div>
-                    <div style="flex:1;">
-                        <div style="text-align:center; color:#aaa; margin-bottom:5px;">Points Attaque</div>
-                        <input type="number" value="${c.points}" onchange="tarotGame.setPoints(this.value)" style="text-align:center; font-size:1.5rem; font-weight:bold;">
-                    </div>
-                 </div>`;
+            <div style="display:flex; gap:10px;">
+                <div style="flex:1">
+                    <label>Bouts</label>
+                    <select id="t-oudlers">
+                        <option value="0">0 (56)</option>
+                        <option value="1">1 (51)</option>
+                        <option value="2">2 (41)</option>
+                        <option value="3">3 (36)</option>
+                    </select>
+                </div>
+                <div style="flex:1">
+                    <label>Points Faits</label>
+                    <input type="number" id="t-points" placeholder="Ex: 41.5" step="0.5">
+                </div>
+            </div>
+           
+            <label>Petit au Bout</label>
+            <select id="t-petit"><option value="0">Non</option><option value="1">Oui (Attaque)</option><option value="-1">Oui (Défense)</option></select>
+        </div>`;
 
-        // --- 5. BONUS (Petit au bout, Poignée) ---
-        html += `<div style="background:rgba(0,0,0,0.2); padding:10px; border-radius:10px; margin-bottom:20px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                        <span>Petit au bout</span>
-                        <div class="tarot-segment" style="margin:0; width:60%;">
-                            <button class="segment-btn ${c.petit===-1?'selected':''}" onclick="tarotGame.setBonus('petit', -1)">Déf</button>
-                            <button class="segment-btn ${c.petit===0?'selected':''}" onclick="tarotGame.setBonus('petit', 0)">-</button>
-                            <button class="segment-btn ${c.petit===1?'selected':''}" onclick="tarotGame.setBonus('petit', 1)">Att</button>
-                        </div>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span>Poignée</span>
-                        <div class="tarot-segment" style="margin:0; width:60%;">
-                            <button class="segment-btn ${c.poignee===0?'selected':''}" onclick="tarotGame.setBonus('poignee', 0)">-</button>
-                            <button class="segment-btn ${c.poignee===20?'selected':''}" onclick="tarotGame.setBonus('poignee', 20)">Simp</button>
-                            <button class="segment-btn ${c.poignee===30?'selected':''}" onclick="tarotGame.setBonus('poignee', 30)">Doub</button>
-                            <button class="segment-btn ${c.poignee===40?'selected':''}" onclick="tarotGame.setBonus('poignee', 40)">Trip</button>
-                        </div>
-                    </div>
-                 </div>`;
-
-        // --- 6. BOUTON VALIDER ---
-        container.innerHTML = html;
+        // 3. Buttons
         document.getElementById('action-btn-container').innerHTML = `
-            <button class="btn btn-tarot" onclick="tarotGame.validate()">Calculer la manche</button>
-        `;
+        <div class="btn-row">
+            <button class="btn btn-neutral" onclick="app.finishGame()">Finir</button>
+            <button class="btn btn-tarot" onclick="tarotGame.validate()">Valider</button>
+        </div>`;
     },
 
-    // --- SETTERS ---
-    setTaker: function(i) { this.current.taker = i; this.render(document.getElementById('game-container')); },
-    setPartner: function(i) { this.current.partner = i; this.render(document.getElementById('game-container')); },
-    setContract: function(v) { this.current.contract = v; this.render(document.getElementById('game-container')); },
-    setOudlers: function(v) { this.current.oudlers = v; this.render(document.getElementById('game-container')); },
-    setPoints: function(v) { this.current.points = parseFloat(v); }, // Pas de re-render pour ne pas perdre le focus
-    setBonus: function(type, v) { this.current[type] = v; this.render(document.getElementById('game-container')); },
+    sel: function(btn, val) {
+        document.querySelectorAll('.segment-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        document.getElementById('t-contract').value = val;
+    },
 
-    // --- CALCULS ---
+    // Fonction utilitaire pour arrondir à la dizaine
+    round10: function(val) {
+        return Math.round(val / 10) * 10;
+    },
+
     validate: function() {
-        // 1. CHECKPOINT POUR L'HISTORIQUE (Important !)
+        // --- C'EST ICI QUE LA SAUVEGARDE SE FAIT ---
+        // On prend une photo de l'état AVANT de changer les scores
         app.createCheckpoint();
+        // -------------------------------------------
 
-        const c = this.current;
-        const nbPlayers = app.state.players.length;
+        const takerIdx = parseInt(document.getElementById('t-taker').value);
+        const partnerIdx = document.getElementById('t-partner') ? parseInt(document.getElementById('t-partner').value) : -1;
+        const contract = document.getElementById('t-contract').value;
+        const nbOudlers = parseInt(document.getElementById('t-oudlers').value);
+        const pointsInput = document.getElementById('t-points').value;
+        const petit = parseInt(document.getElementById('t-petit').value);
 
-        // Objectifs selon nombre de bouts
-        const targets = { 0: 56, 1: 51, 2: 41, 3: 36 };
-        const target = targets[c.oudlers];
-       
-        // Calcul de base
-        let diff = c.points - target;
+        if (pointsInput === "") return alert("Points manquants !");
+        const pointsMade = parseFloat(pointsInput);
+
+        if (app.state.players.length === 5 && takerIdx === partnerIdx) return alert("Le preneur ne peut pas être partenaire.");
+
+        // 1. Calcul de la différence
+        const target = this.OUDLERS[nbOudlers];
+        const diff = pointsMade - target;
         const isSuccess = diff >= 0;
        
-        // La règle des 25 points
-        let scoreBase = 25 + Math.abs(diff);
-        if (c.contract === 1 && !isSuccess) {
-            // Cas particulier Petite perdue ? Non, le calcul reste (25 + chute) * 1
-        }
+        // 2. Score de base (25 + Ecart)
+        let base = 25 + Math.abs(diff);
+        let score = base * this.CONTRATS[contract];
 
-        // Multiplicateur Contrat
-        let scoreTotal = scoreBase * c.contract;
+        // 3. Gestion du Petit au Bout (Multiplié par le contrat)
+        if (petit === 1) score += (10 * this.CONTRATS[contract]);
+        if (petit === -1) score -= (10 * this.CONTRATS[contract]);
 
-        // Ajout Poignée (Indépendant du multiplicateur, s'ajoute au camp qui l'a annoncée - Simplification : Ajouté au score de base)
-        // Note: Normalement la poignée est ajoutée avant multiplication ? Non, après mais non multipliée.
-        // Simplification usuelle : (25 + pts + petit) * contrat + poignée.
-        // Ici on va faire simple : on l'ajoute au total du camp gagnant.
-        scoreTotal += c.poignee;
+        // 4. ARRONDI À LA DIZAINE
+        score = this.round10(score);
 
-        // Petit au bout (Multiplié par le contrat !)
-        // Si petit mené par attaque au bout : (25 + pts + 10) * contrat
-        if (c.petit !== 0) {
-            // Le petit au bout (10pts) est multiplié par le contrat
-            const petitPoints = 10 * c.contract;
-           
-            if (isSuccess) {
-                // Si attaque gagne
-                if (c.petit === 1) scoreTotal += petitPoints; // Attaque a mené petit -> Bonus
-                else scoreTotal -= petitPoints; // Défense a mené petit -> Malus pour attaque
+        // 5. Application de la Chute ou Réussite
+        if (!isSuccess) score = -score;
+
+        // 6. Distribution des points
+        const nbP = app.state.players.length;
+       
+        if (nbP < 5) {
+            // 3 ou 4 Joueurs (1 contre tous)
+            const defCount = nbP - 1;
+            app.state.players.forEach((p, i) => {
+                if (i === takerIdx) p.score += (score * defCount);
+                else p.score -= score;
+            });
+        } else {
+            // 5 Joueurs
+            if (partnerIdx === -1) {
+                // Preneur joue seul contre 4
+                app.state.players.forEach((p, i) => {
+                    if (i === takerIdx) p.score += (score * 4);
+                    else p.score -= score;
+                });
             } else {
-                // Si attaque perd
-                if (c.petit === 1) scoreTotal -= petitPoints; // Attaque a mené petit -> Moins de perte ? Non, ils ont le bonus mais perdent le contrat.
-                // Correction Règle officielle : Le petit au bout profite à celui qui le fait, quel que soit le résultat du contrat.
-                // Donc on le traite à part.
+                // Appel au Roi (2 contre 3)
+                app.state.players.forEach((p, i) => {
+                    if (i === takerIdx) p.score += (score * 2);
+                    else if (i === partnerIdx) p.score += score;
+                    else p.score -= score;
+                });
             }
         }
-       
-        // RE-CALCUL PLUS STRICT :
-        // Score = (25 + |Ecart|) * Contrat
-        let ptsContrat = (25 + Math.abs(diff)) * c.contract;
-       
-        // Petit au Bout : + ou - (10 * Contrat) pour celui qui l'a fait
-        if (c.petit === 1) ptsContrat += (10 * c.contract); // Bonus pour l'attaque
-        if (c.petit === -1) ptsContrat -= (10 * c.contract); // Malus pour l'attaque (car bonus pour la défense)
 
-        // Poignée : Ajoutée au total
-        ptsContrat += c.poignee;
-
-        // Résultat final pour le preneur
-        const finalScore = isSuccess ? ptsContrat : -ptsContrat;
-
-        // --- DISTRIBUTION DES POINTS ---
-        app.state.players.forEach((p, i) => {
-            // Le Preneur
-            if (i === c.taker) {
-                if (nbPlayers === 5 && c.partner !== -1) {
-                    p.score += (finalScore * 2); // À 5, preneur gagne x2 (il paie les 3 defs, reçoit de son partenaire)
-                    // Règle à 5 : (Preneur + Partenaire) vs (3 Défenseurs).
-                    // ScoreBase * 2 pour Preneur, * 1 pour Partenaire.
-                } else {
-                    p.score += (finalScore * (nbPlayers - 1));
-                }
-            }
-            // Le Partenaire (Si 5 joueurs)
-            else if (nbPlayers === 5 && i === c.partner) {
-                p.score += finalScore; // Le partenaire gagne 1x la mise
-            }
-            // Les Défenseurs
-            else {
-                p.score -= finalScore; // Les défenseurs perdent la mise
-            }
-        });
-
-        // Reset partiel pour la manche suivante
-        this.current.points = 0;
-        this.current.petit = 0;
-        this.current.poignee = 0;
-       
-        app.nextRound();
+        app.nextRound(); // Sauvegarde automatique et passage à la manche suivante
     }
 };
