@@ -48,6 +48,8 @@ const ramiGame = {
     },
 
     validate: function() {
+        // 1. CHECKPOINT ! (On sauvegarde l'état AVANT de calculer les nouveaux scores)
+        app.createCheckpoint(); 
         for (let i = 0; i < app.state.players.length; i++) {
             const input = document.getElementById(`rami-in-${i}`);
             const val = parseInt(input.value);
@@ -57,4 +59,5 @@ const ramiGame = {
         }
         app.nextRound();
     }
+
 };
