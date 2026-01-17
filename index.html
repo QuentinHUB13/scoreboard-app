@@ -263,6 +263,13 @@
 <body>
     <div id="screen-menu">
         <h1>Mes Jeux</h1>
+        <div style="text-align:center; margin-bottom:20px;">
+            <h1 style="font-size:2.5rem; margin-bottom:5px;">ScoreBoard</h1>
+            <p style="color:#aaa;">Compteur de points universel</p>
+            <button id="btn-resume" class="btn hidden" onclick="app.resumeGame()" style="background: linear-gradient(45deg, #ff9800, #f57c00); margin-top:15px; width:auto; padding-left:30px; padding-right:30px;">
+                📂 Reprendre la partie en cours 
+            </button>
+        </div>
         <div class="game-card" onclick="app.goToSetup('skullking')"><span class="game-icon">💀</span><h2>Skull King</h2><button class="btn btn-sk">Jouer</button></div>
         <div class="game-card" onclick="app.goToSetup('papayoo')"><span class="game-icon">🎲</span><h2>Papayoo</h2><button class="btn btn-pap">Jouer</button></div>
         <div class="game-card" onclick="app.goToSetup('tarot')"><span class="game-icon">🔮</span><h2>Tarot</h2><button class="btn btn-tarot">Jouer</button></div>
@@ -351,5 +358,6 @@
     </script>
 </body>
 </html>
+
 
 
