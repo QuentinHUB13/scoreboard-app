@@ -45,7 +45,10 @@ const papayooGame = {
     },
 
     validate: function() {
+        // 1. CHECKPOINT ! (On sauvegarde l'état AVANT de calculer les nouveaux scores)
+        app.createCheckpoint(); 
         app.state.players.forEach((p, i) => p.score += (parseInt(document.getElementById(`pap-in-${i}`).value) || 0));
         app.nextRound();
     }
+
 };
