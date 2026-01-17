@@ -70,7 +70,9 @@ const tarotGame = {
         return Math.round(val / 10) * 10;
     },
 
-    validate: function() {
+    validate: function() {<
+        // 1. CHECKPOINT ! (On sauvegarde l'état AVANT de calculer les nouveaux scores)
+        app.createCheckpoint();
         const takerIdx = parseInt(document.getElementById('t-taker').value);
         const partnerIdx = document.getElementById('t-partner') ? parseInt(document.getElementById('t-partner').value) : -1;
         const contract = document.getElementById('t-contract').value;
@@ -133,4 +135,5 @@ const tarotGame = {
 
         app.nextRound();
     }
+
 };
